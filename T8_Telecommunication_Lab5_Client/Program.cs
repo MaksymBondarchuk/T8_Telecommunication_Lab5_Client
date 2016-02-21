@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace T8_Telecommunication_Lab5_Client
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
+            Console.WriteLine("MachineName: {0}", Environment.MachineName);
+
             // Data buffer for incoming data.
             byte[] bytes = new byte[1024];
 
@@ -37,15 +38,27 @@ namespace T8_Telecommunication_Lab5_Client
                         sender.RemoteEndPoint.ToString());
 
                     // Encode the data string into a byte array.
-                    byte[] msg = Encoding.ASCII.GetBytes("This is a test<EOF>");
+                    byte[] msg = Encoding.ASCII.GetBytes(Environment.MachineName);
 
                     // Send the data through the socket.
                     int bytesSent = sender.Send(msg);
 
                     // Receive the response from the remote device.
                     int bytesRec = sender.Receive(bytes);
-                    Console.WriteLine("Echoed test = {0}",
-                        Encoding.ASCII.GetString(bytes, 0, bytesRec));
+
+                    var receivedRow = new List<byte>();
+                    for (var i = 0; i < bytesRec; i++)
+                        receivedRow.Add(bytes[i]);
+                    Console.WriteLine("I received:");
+                    foreach (var item in receivedRow)
+                        Console.Write($"{item,4}");
+                    Console.WriteLine();
+
+                    receivedRow.Sort();
+                    msg = receivedRow.ToArray();
+                    sender.Send(msg);
+                    //Console.WriteLine("Echoed test = {0}",
+                    //Encoding.ASCII.GetString(bytes, 0, bytesRec));
 
                     // Release the socket.
                     sender.Shutdown(SocketShutdown.Both);
