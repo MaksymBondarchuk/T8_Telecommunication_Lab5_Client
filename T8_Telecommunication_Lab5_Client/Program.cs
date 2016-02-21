@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace T8_Telecommunication_Lab5_Client
@@ -23,7 +22,7 @@ namespace T8_Telecommunication_Lab5_Client
                 // This example uses port 11000 on the local computer.
                 IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
                 IPAddress ipAddress = ipHostInfo.AddressList[0];
-                IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);
+                IPEndPoint remoteEp = new IPEndPoint(ipAddress, 11000);
 
                 // Create a TCP/IP  socket.
                 Socket sender = new Socket(AddressFamily.InterNetwork,
@@ -32,7 +31,7 @@ namespace T8_Telecommunication_Lab5_Client
                 // Connect the socket to the remote endpoint. Catch any errors.
                 try
                 {
-                    sender.Connect(remoteEP);
+                    sender.Connect(remoteEp);
 
                     Console.WriteLine("Socket connected to {0}",
                         sender.RemoteEndPoint.ToString());
@@ -41,24 +40,39 @@ namespace T8_Telecommunication_Lab5_Client
                     byte[] msg = Encoding.ASCII.GetBytes(Environment.MachineName);
 
                     // Send the data through the socket.
-                    int bytesSent = sender.Send(msg);
+                    sender.Send(msg);
 
                     // Receive the response from the remote device.
-                    int bytesRec = sender.Receive(bytes);
+                    var bytesRec = sender.Receive(bytes);
+
+                    if (bytesRec == 0)
+                    {
+                        sender.Shutdown(SocketShutdown.Both);
+                        sender.Close();
+                        Console.WriteLine("\nI was ignored by server (looks like no work for me)\n");
+                        return;
+                    }
 
                     var receivedRow = new List<byte>();
                     for (var i = 0; i < bytesRec; i++)
                         receivedRow.Add(bytes[i]);
-                    Console.WriteLine("I received:");
+
+                    Console.WriteLine("\nI received:");
                     foreach (var item in receivedRow)
                         Console.Write($"{item,4}");
                     Console.WriteLine();
 
                     receivedRow.Sort();
+
+                    Console.WriteLine("\nThen sorted into:");
+                    foreach (var item in receivedRow)
+                        Console.Write($"{item,4}");
+                    Console.WriteLine();
+
                     msg = receivedRow.ToArray();
                     sender.Send(msg);
-                    //Console.WriteLine("Echoed test = {0}",
-                    //Encoding.ASCII.GetString(bytes, 0, bytesRec));
+                    Console.WriteLine("And sended that back to server");
+
 
                     // Release the socket.
                     sender.Shutdown(SocketShutdown.Both);
@@ -67,15 +81,15 @@ namespace T8_Telecommunication_Lab5_Client
                 }
                 catch (ArgumentNullException ane)
                 {
-                    Console.WriteLine("ArgumentNullException : {0}", ane.ToString());
+                    Console.WriteLine("ArgumentNullException : {0}", ane);
                 }
                 catch (SocketException se)
                 {
-                    Console.WriteLine("SocketException : {0}", se.ToString());
+                    Console.WriteLine("SocketException : {0}", se);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Unexpected exception : {0}", e.ToString());
+                    Console.WriteLine("Unexpected exception : {0}", e);
                 }
 
             }
