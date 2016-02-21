@@ -20,12 +20,12 @@ namespace T8_Telecommunication_Lab5_Client
             {
                 // Establish the remote endpoint for the socket.
                 // This example uses port 11000 on the local computer.
-                IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
+                IPHostEntry ipHostInfo = Dns.GetHostEntry("DESKTOP-DP2VKQC");
                 IPAddress ipAddress = ipHostInfo.AddressList[0];
                 IPEndPoint remoteEp = new IPEndPoint(ipAddress, 11000);
 
                 // Create a TCP/IP  socket.
-                Socket sender = new Socket(AddressFamily.InterNetwork,
+                Socket sender = new Socket(AddressFamily.InterNetworkV6,
                     SocketType.Stream, ProtocolType.Tcp);
 
                 // Connect the socket to the remote endpoint. Catch any errors.
@@ -34,7 +34,7 @@ namespace T8_Telecommunication_Lab5_Client
                     sender.Connect(remoteEp);
 
                     Console.WriteLine("Socket connected to {0}",
-                        sender.RemoteEndPoint.ToString());
+                        sender.RemoteEndPoint);
 
                     // Encode the data string into a byte array.
                     byte[] msg = Encoding.ASCII.GetBytes(Environment.MachineName);
@@ -45,6 +45,7 @@ namespace T8_Telecommunication_Lab5_Client
                     // Receive the response from the remote device.
                     var bytesRec = sender.Receive(bytes);
 
+                    // If no work for this client
                     if (bytesRec == 0)
                     {
                         sender.Shutdown(SocketShutdown.Both);
@@ -53,6 +54,7 @@ namespace T8_Telecommunication_Lab5_Client
                         return;
                     }
 
+                    // Convert received data to list
                     var receivedRow = new List<byte>();
                     for (var i = 0; i < bytesRec; i++)
                         receivedRow.Add(bytes[i]);
@@ -69,6 +71,7 @@ namespace T8_Telecommunication_Lab5_Client
                         Console.Write($"{item,4}");
                     Console.WriteLine();
 
+                    // Send sorted data back to server
                     msg = receivedRow.ToArray();
                     sender.Send(msg);
                     Console.WriteLine("And sended that back to server");
